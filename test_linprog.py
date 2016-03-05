@@ -16,52 +16,52 @@ class TestLinsolve(TestCase):
     
     def testTrivialIneq(self):
         # X <= 2; X>=0; X -> min
-        res, sol = linsolve( c = [1], ineq_left=[[1]], ineq_right = [2], nonneg_variables=[0], do_coerce=True )
+        res, sol = linsolve( objective = [1], ineq_left=[[1]], ineq_right = [2], nonneg_variables=[0], do_coerce=True )
         self.assertEqual(res, RESOLUTION_SOLVED)
         self.assertVectorEqual(sol, [0] )
 
         # X <= 2; X>=0; -X -> min
-        res, sol = linsolve( c = [-1], ineq_left=[[1]], ineq_right = [2], nonneg_variables=[0], do_coerce=True )
+        res, sol = linsolve( objective = [-1], ineq_left=[[1]], ineq_right = [2], nonneg_variables=[0], do_coerce=True )
         self.assertEqual(res, RESOLUTION_SOLVED)
         self.assertVectorEqual(sol, [2] )
 
     def testTrivialIneqUndefinedSign(self):
         # X <= -2; -X -> min
-        res, sol = linsolve( c = [-1], ineq_left=[[1]], ineq_right = [-2], do_coerce=True )
+        res, sol = linsolve( objective = [-1], ineq_left=[[1]], ineq_right = [-2], do_coerce=True )
         self.assertEqual(res, RESOLUTION_SOLVED)
         self.assertVectorEqual(sol, [-2] )
 
         # X >= 2; X -> min
-        res, sol = linsolve( c = [1], ineq_left=[[-1]], ineq_right = [-2], do_coerce=True )
+        res, sol = linsolve( objective = [1], ineq_left=[[-1]], ineq_right = [-2], do_coerce=True )
         self.assertEqual(res, RESOLUTION_SOLVED)
         self.assertVectorEqual(sol, [2] )
 
     def testTrivialEq(self):
         
         # X = 2; X>=0;  X -> min
-        res, sol = linsolve( c = [1], eq_left=[[1]], eq_right = [2], nonneg_variables=[0], do_coerce=True )
+        res, sol = linsolve( objective = [1], eq_left=[[1]], eq_right = [2], nonneg_variables=[0], do_coerce=True )
         self.assertEqual(res, RESOLUTION_SOLVED)
         self.assertVectorEqual(sol, [2] )
 
         # X = 2; X -> min
-        res, sol = linsolve( c = [1], eq_left=[[1]], eq_right = [2], do_coerce=True )
+        res, sol = linsolve( objective = [1], eq_left=[[1]], eq_right = [2], do_coerce=True )
         self.assertEqual(res, RESOLUTION_SOLVED)
         self.assertVectorEqual(sol, [2] )
 
     def testTrivialUnbound(self):
         # x >=0  -x -> min
-        res, sol = linsolve( c = [-1], nonneg_variables=[0], do_coerce=True )
+        res, sol = linsolve( objective = [-1], nonneg_variables=[0], do_coerce=True )
         self.assertEqual(res, RESOLUTION_UNBOUNDED)
 
         # x >= -2  -x -> min
-        res, sol = linsolve( c = [-1], ineq_left=[[-1]], ineq_right=[2], do_coerce=True )
+        res, sol = linsolve( objective = [-1], ineq_left=[[-1]], ineq_right=[2], do_coerce=True )
         self.assertEqual(res, RESOLUTION_UNBOUNDED)
 
     def testTrivialIncompatible(self):
         # x >= 1
         # x <= -2
         # x -> min
-        res, sol = linsolve( c = [1], ineq_left=[[-1],[1]], ineq_right=[-1, -2], do_coerce=True )
+        res, sol = linsolve( objective = [1], ineq_left=[[-1],[1]], ineq_right=[-1, -2], do_coerce=True )
         self.assertEqual(res, RESOLUTION_INCOMPATIBLE)
 
     def testNontrivial(self):
@@ -74,12 +74,9 @@ class TestLinsolve(TestCase):
 
         B = [440, 65, 320]
 
-        #num = RealFiniteTolerance(eps=0.00001)
-        num = RationalNumbers()
-
         resolution, sol = linsolve( C, ineq_left = A, ineq_right = B, nonneg_variables=(0,1),
                                     do_coerce=True,
-                                    num = None)
+                                    num = RationalNumbers())
         self.assertEqual(resolution, RESOLUTION_SOLVED)
         self.assertVectorEqual(sol, [60, 80])
 
@@ -89,7 +86,7 @@ class TestLinsolve(TestCase):
         # x,y >= 0
         # x + 2y -> min
 
-        res, sol = linsolve( c = [1,2],
+        res, sol = linsolve( objective = [1,2],
                              eq_left=[[1,1]],
                              eq_right = [1],
                              nonneg_variables=[0,1],
@@ -102,7 +99,7 @@ class TestLinsolve(TestCase):
         # x,y >= 0
         # x + 2y -> max
 
-        res, sol = linsolve( c = [-1,-2],
+        res, sol = linsolve( objective = [-1,-2],
                              eq_left=[[1,1]],
                              eq_right = [1],
                              nonneg_variables=[0,1],

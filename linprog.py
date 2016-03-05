@@ -22,7 +22,7 @@ class RealFiniteTolerance(NumberTypeclass):
     def coerce(self, x): return float(x)
 
 class RationalNumbers(NumberTypeclass):    
-    def __init__(self, eps=1e-6):
+    def __init__(self):
         super(RationalNumbers, self).__init__()
         self._one = Fraction(1)
         self._zero = Fraction(0)
@@ -262,26 +262,35 @@ def simplex_canonical_m( a, b, c, basis, num, verbose=False, do_coerce = True):
     
     return simplex_canonical(a, m_solver.b, c, m_solver.basis, num = num, verbose=verbose, do_coerce=False)
 
-
-
-def linsolve( c, ineq_left=(), ineq_right=(), eq_left=(), eq_right=(),
-              nonneg_variables = None, num=None, verbose=False, do_coerce=True):
-    """  Ax <= B
+def linsolve( objective,
+              ineq_left=(), ineq_right=(),
+              eq_left=(), eq_right=(),
+              nonneg_variables = (),
+              num=RealFiniteTolerance(),
+              verbose=False, do_coerce=True):
+    """ Solve arbitrary linear programming problem:
+    Minimize linear function Cx -> min under set of conditions:
+         Ax <= B
          A'x == B'
 
-    ineq_left : MxN matrix A
-    ineq_right: M-vector B
+    Arguments:
+      ineq_left : MxN matrix A
+      ineq_right: M-vector B
 
-    eq_left: M'xN matrix A'
-    eq_right: M'-vector B'
+      eq_left: M'xN matrix A'
+      eq_right: M'-vector B'
 
-    nonneg_variables: list of variables that are >= 0"""
+      nonneg_variables: list of variables (their 0-based indices) that are >= 0
+      num: instance of NumberTypeclass, defining numeric implementation to be used. Default is RealFiniteTolerance().
+      do_coerce: if True, all provided values are converted by the 'coerce' method of the typeclass before solving the problem. Added for testing convenience.
+      verbose: if True, then solver prints solution steps to the console. Added for debug.
 
-    if num is None: num = RealFiniteTolerance()
-
-    nonneg_variables = set(nonneg_variables or ())
-
-    n = len(c)
+    Returns tuple: (resulution, x).
+    Where resolution is one of RESOLUTION_SOLVED, RESOLUTION_INCOMPATIBLE, RESOLUTION_UNBOUNDED
+    If resolution is RESOLUTION_SOLVED, then x contains solution vector (list). Othervise, value of x is not defined.
+    """
+    nonneg_variables = set(nonneg_variables)
+    n = len(objective)
     assert all( len(aj) == n for aj in ineq_left )
     assert all( len(aj) == n for aj in eq_left )
 
@@ -312,7 +321,7 @@ def linsolve( c, ineq_left=(), ineq_right=(), eq_left=(), eq_right=(),
                  for i in range(n_nonneg) ]
 
     #Get rid of nonpositive variablesby substitution
-    c_nonneg = positivise_row(c)
+    c_nonneg = positivise_row(objective)
     ineq_left_nonneg = list(map(positivise_row, ineq_left))
     eq_left_nonneg = list(map(positivise_row, eq_left))
     
@@ -381,24 +390,3 @@ def linsolve( c, ineq_left=(), ineq_right=(), eq_left=(), eq_right=(),
         return resolution, orig_solution
     else:
         return resolution, solution
-        
-if __name__=="__main__":
-    A = [[2,   4   ],
-         [0.5, 0.25],
-         [2,   2.5 ]]
-    
-    C = [-8,   -14]
-    
-    B = [440, 65, 320]
-
-    #num = RealFiniteTolerance(eps=0.00001)
-    num = RationalNumbers()
-    
-    resolution, sol = linsolve( C, ineq_left = A, ineq_right = B, nonneg_variables=(0,1),
-                                verbose=True,
-                                num = None)
-
-    print(resolution)
-    if resolution == RESOLUTION_SOLVED:
-        print("Solution:", '[' + ", ".join(str(xi) for xi in sol)+']')
-        
